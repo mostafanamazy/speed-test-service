@@ -1,0 +1,13 @@
+#IDIR =./include
+CC=gcc
+#CFLAGS=-I$(IDIR)
+
+ODIR=../obj
+#LDIR =./lib
+BDIR = ../build
+
+#LIBS=-lm
+
+#_DEPS = hellomake.h
+#DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
+
