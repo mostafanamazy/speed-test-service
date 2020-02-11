@@ -65,6 +65,17 @@ input_timeout (int filedes, unsigned int seconds)
    return ret;
 }
 
+void
+print_humanable(size_t bytes, int time)
+{
+  bytes = bytes / time;
+  if(bytes > 1048576)
+     fprintf(stdout, "`%d` MB/s (for %d seconds)\n", bytes >> 20, time);
+  else if(bytes > 1024)
+     fprintf(stdout, "`%d` KB/s (for %d seconds)\n", bytes >> 10, time);
+  else
+     fprintf(stdout, "`%d` B/s (for %d seconds)\n", bytes, time);
+}
 
 void
 write_to_server (int filedes, configuration conf)
@@ -76,6 +87,9 @@ write_to_server (int filedes, configuration conf)
   time(&end);
   char data[MAXMSG];
   memset(data, 'C', sizeof(data));
+  int up_time = conf.upload_time > 0 ? conf.upload_time : 10;
+  int down_time = conf.download_time > 0 ? conf.download_time : 10;
+  int timeout = conf.timeout > 0 ? conf.timeout : 10;
 
   while(end - start < conf.upload_time && nbytes > 0)
    {
@@ -83,7 +97,8 @@ write_to_server (int filedes, configuration conf)
      total += nbytes < 0 ? 0 : nbytes;
      time(&end);
    }
-   fprintf(stdout,"%ld \n" , total);
+  fprintf(stdout,"[Upload] ");
+  print_humanable(total, up_time);
   nbytes = write (filedes, MESSAGE, strlen (MESSAGE) + 1);
   if (nbytes < 0)
     {
@@ -92,14 +107,15 @@ write_to_server (int filedes, configuration conf)
     }
     start = end;
     total = 0;
-    while( end - start < conf.download_time && nbytes > 0)
+    while( end - start < down_time && nbytes > 0)
     {
-       int ret = input_timeout(filedes, conf.timeout);  
+       int ret = input_timeout(filedes, timeout);  
        nbytes = ret > 0 ? read (filedes, data, sizeof(data)) : ret;
        total += nbytes < 0 ? 0 : nbytes;
        time(&end);
     }
-   fprintf(stdout,"%ld" , total);
+  fprintf(stdout,"[Download] ");
+  print_humanable(total, down_time);
 }
 
 static int handler(void* user, const char* section, const char* name,
