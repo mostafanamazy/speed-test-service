@@ -8,6 +8,8 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 
+#include "globals.h"
+
 #define PORT            5555
 #define MESSAGE         "END"
 #define SERVERHOST      "127.0.0.1"
@@ -66,7 +68,7 @@ write_to_server (int filedes)
   time_t start, end;
   time(&start);
   time(&end);
-  char data[1024];
+  char data[MAXMSG];
   memset(data, 'C', sizeof(data));
 
   while(end - start < ELAPSE && nbytes > 0)

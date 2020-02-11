@@ -9,9 +9,9 @@
 #include <netdb.h>
 #include <pthread.h>
 
-#define PORT    5555
-#define MAXMSG  1024
+#include "globals.h"
 
+#define PORT    5555
 
 int
 make_socket (uint16_t port)
