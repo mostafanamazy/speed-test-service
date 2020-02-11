@@ -1,13 +1,13 @@
-IDIR =../include
+IDIR = ../include ../libs/inih
 CC=gcc
-CFLAGS=-I$(IDIR)
+CFLAGS =$(foreach d, $(IDIR), -I$d)
 
 ODIR=../obj
-#LDIR =./lib
+LDIR =../libs/inih/extra/
+LFLAGS = $(foreach d, $(LDIR), -L$d)
 BDIR = ../build
 
-LIBS=-lpthread
+LIBS= -lpthread -linih
 
-#_DEPS = hellomake.h
-#DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
+DEPS = $(foreach d, $(IDIR), $(wildcard $d/*.h))
 

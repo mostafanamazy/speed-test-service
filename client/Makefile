@@ -4,9 +4,9 @@ _OBJ = $(SRC:.c=.o)
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 $(ODIR)/%.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
+	$(CC) -c -o $@ $< $(CFLAGS) $(LFLAGS)
 
 client: $(OBJ)
-	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
+	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LFLAGS) $(LIBS)
 
 
