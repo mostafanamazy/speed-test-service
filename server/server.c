@@ -9,9 +9,8 @@
 #include <netdb.h>
 #include <pthread.h>
 
+#include "ini.h"
 #include "globals.h"
-
-#define PORT    5555
 
 int
 make_socket (uint16_t port)
@@ -86,10 +85,42 @@ read_from_client (int filedes)
     }
 }
 
-int
-main (void)
+typedef struct
 {
-  extern int make_socket (uint16_t port);
+    int port;
+    int timeout;
+    const char* ip;
+    const char* protocol;
+} configuration;
+
+static int handler(void* user, const char* section, const char* name,
+                   const char* value)
+{
+    configuration* pconfig = (configuration*)user;
+
+    #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
+    if (MATCH("server", "port"))
+       pconfig->port = atoi(value);
+    else if (MATCH("server", "timeout"))
+       pconfig->timeout = atoi(value);
+    else if (MATCH("server", "ip"))
+       pconfig->ip = strdup(value);
+    else if (MATCH("server", "protocol"))
+       pconfig->protocol = strdup(value);
+    else
+       return 0;
+    return 1;
+}
+
+int
+main (int argc, char *argv[])
+{
+  configuration config;
+  if (argc !=2 || ini_parse(argv[1], handler, &config) < 0)
+   {
+      printf("Can't load configuration file.\n");
+      exit (EXIT_FAILURE);
+   }
   int sock;
   fd_set active_fd_set, read_fd_set;
   int i;
@@ -97,7 +128,7 @@ main (void)
   size_t size;
 
   /* Create the socket and set it up to accept connections. */
-  sock = make_socket (PORT);
+  sock = make_socket (config.port);
   if (listen (sock, 1) < 0)
     {
       perror ("listen");

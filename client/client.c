@@ -8,14 +8,20 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 
+#include "ini.h"
 #include "globals.h"
 
-#define PORT            5555
 #define MESSAGE         "END"
-#define SERVERHOST      "127.0.0.1"
-#define ELAPSE		10
-#define ELAPSED		10
-#define TIMEOUT         10
+
+typedef struct
+{
+    int port;
+    const char* ip;
+    int timeout;
+    int download_time;
+    int upload_time;
+} configuration;
+
 
 void
 init_sockaddr (struct sockaddr_in *name,
@@ -61,7 +67,7 @@ input_timeout (int filedes, unsigned int seconds)
 
 
 void
-write_to_server (int filedes)
+write_to_server (int filedes, configuration conf)
 {
   int nbytes = 1;
   size_t total = 0;
@@ -71,7 +77,7 @@ write_to_server (int filedes)
   char data[MAXMSG];
   memset(data, 'C', sizeof(data));
 
-  while(end - start < ELAPSE && nbytes > 0)
+  while(end - start < conf.upload_time && nbytes > 0)
    {
      nbytes = write (filedes, data, sizeof(data));
      total += nbytes < 0 ? 0 : nbytes;
@@ -86,9 +92,9 @@ write_to_server (int filedes)
     }
     start = end;
     total = 0;
-    while( end - start < ELAPSED && nbytes > 0)
+    while( end - start < conf.download_time && nbytes > 0)
     {
-       int ret = input_timeout(filedes, TIMEOUT);  
+       int ret = input_timeout(filedes, conf.timeout);  
        nbytes = ret > 0 ? read (filedes, data, sizeof(data)) : ret;
        total += nbytes < 0 ? 0 : nbytes;
        time(&end);
@@ -96,13 +102,37 @@ write_to_server (int filedes)
    fprintf(stdout,"%ld" , total);
 }
 
+static int handler(void* user, const char* section, const char* name,
+                   const char* value)
+{
+    configuration* pconfig = (configuration*)user;
+
+    #define MATCH(s, n) strcmp(section, s) == 0 && strcmp(name, n) == 0
+    if (MATCH("server", "address_port")) {
+        pconfig->port = atoi(value);
+    } else if (MATCH("server", "address_ip")) {
+        pconfig->ip = strdup(value);
+    } else if (MATCH("server", "timeout")) {
+        pconfig->timeout = atoi(value);
+    } else if (MATCH("test", "download_time")) {
+        pconfig->download_time = atoi(value);
+    } else if (MATCH("test", "upload_time")) {
+        pconfig->upload_time = atoi(value);
+    } else {
+        return 0;  /* unknown section/name, error */
+    }
+    return 1;
+}
 
 int
-main (void)
+main (int argc, char* argv[])
 {
-  extern void init_sockaddr (struct sockaddr_in *name,
-                             const char *hostname,
-                             uint16_t port);
+  configuration config;
+  if (argc !=2 || ini_parse(argv[1], handler, &config) < 0)
+   {
+      printf("Can't load configuration file.\n");
+      exit (EXIT_FAILURE);
+   }
   int sock;
   struct sockaddr_in servername;
 
@@ -115,7 +145,7 @@ main (void)
     }
 
   /* Connect to the server. */
-  init_sockaddr (&servername, SERVERHOST, PORT);
+  init_sockaddr (&servername, config.ip, config.port);
   if (0 > connect (sock,
                    (struct sockaddr *) &servername,
                    sizeof (servername)))
@@ -125,7 +155,7 @@ main (void)
     }
 
   /* Send data to the server. */
-  write_to_server (sock);
+  write_to_server (sock, config);
   close (sock);
   exit (EXIT_SUCCESS);
 }
