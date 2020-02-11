@@ -7,9 +7,10 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <pthread.h>
 
 #define PORT    5555
-#define MAXMSG  512
+#define MAXMSG  1024
 
 
 int
@@ -39,6 +40,18 @@ make_socket (uint16_t port)
   return sock;
 }
 
+static void *
+thread_write_client(void *arg)
+{
+  int filedes = (int) arg;
+  char buffer[MAXMSG];
+  int nbytes=1;
+  memset(buffer, 'C', MAXMSG);
+  while (nbytes > 0)
+      nbytes = write(filedes, buffer, MAXMSG);
+  close(filedes);
+}
+
 int
 read_from_client (int filedes)
 {
@@ -53,12 +66,22 @@ read_from_client (int filedes)
       exit (EXIT_FAILURE);
     }
   else if (nbytes == 0)
+    {
     /* End-of-file. */
+    printf(stdout, "0 byte received");
     return -1;
+    }
   else
     {
       /* Data read. */
-      fprintf (stderr, "Server: got message: `%s'\n", buffer);
+      fprintf (stderr, "Server: got message: %c`%d'\n",buffer[nbytes - 1], filedes);
+    if (buffer [nbytes -1] == '\0')
+    {
+       pthread_t t;
+       if(pthread_create(&t, NULL,thread_write_client, filedes) == 0)
+          pthread_detach(t); 
+       return -2;
+     }
       return 0;
     }
 }
@@ -122,9 +145,11 @@ main (void)
             else
               {
                 /* Data arriving on an already-connected socket. */
-                if (read_from_client (i) < 0)
+                int ret = read_from_client (i);
+                if (ret < 0)
                   {
-                    close (i);
+                    if (ret == -1)
+                       close (i);
                     FD_CLR (i, &active_fd_set);
                   }
               }

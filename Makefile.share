@@ -6,7 +6,7 @@ ODIR=../obj
 #LDIR =./lib
 BDIR = ../build
 
-#LIBS=-lm
+LIBS=-lpthread
 
 #_DEPS = hellomake.h
 #DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))

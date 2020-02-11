@@ -1,8 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <netdb.h>
+#include <errno.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+
+#define PORT            5555
+#define MESSAGE         "END"
+#define SERVERHOST      "127.0.0.1"
+#define ELAPSE		10
+#define ELAPSED		10
+#define TIMEOUT         10
 
 void
 init_sockaddr (struct sockaddr_in *name,
@@ -22,31 +33,65 @@ init_sockaddr (struct sockaddr_in *name,
   name->sin_addr = *(struct in_addr *) hostinfo->h_addr;
 }
 
-#include <stdio.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
+int
+input_timeout (int filedes, unsigned int seconds)
+{
+  fd_set set;
+  struct timeval timeout;
 
-#define PORT            5555
-#define MESSAGE         "Yow!!! Are we having fun yet?!?"
-#define SERVERHOST      "127.0.0.1"
+
+  /* Initialize the file descriptor set. */
+  FD_ZERO (&set);
+  FD_SET (filedes, &set);
+
+  /* Initialize the timeout data structure. */
+  timeout.tv_sec = seconds;
+  timeout.tv_usec = 0;
+
+  /* select returns 0 if timeout, 1 if input available, -1 if error. */
+  int ret;
+  do
+   {
+      ret = select(FD_SETSIZE, &set, NULL, NULL, &timeout);
+    } while (ret == -1 && errno == EINTR);
+   return ret;
+}
+
 
 void
 write_to_server (int filedes)
 {
-  int nbytes;
+  int nbytes = 1;
+  size_t total = 0;
+  time_t start, end;
+  time(&start);
+  time(&end);
+  char data[1024];
+  memset(data, 'C', sizeof(data));
 
-  nbytes = write (filedes, MESSAGE, strlen (MESSAGE) );
+  while(end - start < ELAPSE && nbytes > 0)
+   {
+     nbytes = write (filedes, data, sizeof(data));
+     total += nbytes < 0 ? 0 : nbytes;
+     time(&end);
+   }
+   fprintf(stdout,"%ld \n" , total);
   nbytes = write (filedes, MESSAGE, strlen (MESSAGE) + 1);
   if (nbytes < 0)
     {
       perror ("write");
       exit (EXIT_FAILURE);
     }
+    start = end;
+    total = 0;
+    while( end - start < ELAPSED && nbytes > 0)
+    {
+       int ret = input_timeout(filedes, TIMEOUT);  
+       nbytes = ret > 0 ? read (filedes, data, sizeof(data)) : ret;
+       total += nbytes < 0 ? 0 : nbytes;
+       time(&end);
+    }
+   fprintf(stdout,"%ld" , total);
 }
 
 
