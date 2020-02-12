@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <pthread.h>
+#include <arpa/inet.h>
 
 #include "ini.h"
 #include "globals.h"
@@ -73,7 +74,7 @@ read_from_client (int filedes)
   else
     {
       /* Data read. */
-      fprintf (stderr, "Server: got message: %c`%d'\n",buffer[nbytes - 1], filedes);
+//      fprintf (stderr, "Server: got message: %c`%d'\n",buffer[nbytes - 1], filedes);
     if (buffer [nbytes -1] == '\0')
     {
        pthread_t t;
@@ -118,7 +119,7 @@ main (int argc, char *argv[])
   configuration config;
   if (argc !=2 || ini_parse(argv[1], handler, &config) < 0)
    {
-      printf("Can't load configuration file.\n");
+      fprintf(stdout, "Can't load configuration file.\n");
       exit (EXIT_FAILURE);
    }
   int sock;
@@ -166,10 +167,19 @@ main (int argc, char *argv[])
                     perror ("accept");
                     exit (EXIT_FAILURE);
                   }
-  //perror(inet_ntoa (clientname.sin_addr));
-                fprintf (stderr,
-                         "Server: connect from host  , port %hd.\n",
-                         //clientname.sin_addr ? inet_ntoa (clientname.sin_addr): "",
+                time_t rawtime;
+                struct tm *info;
+                time( &rawtime );
+                info = localtime( &rawtime );
+		fprintf (stdout,
+                         "[%d-%02d-%02d %02d:%02d:%02d] %s:%d.\n",
+			 info->tm_year + 1900,
+			 info->tm_mon + 1,
+			 info->tm_mday,
+			 info->tm_hour,
+			 info->tm_min,
+			 info->tm_sec,
+                         inet_ntoa (clientname.sin_addr),
                          ntohs (clientname.sin_port));
                 FD_SET (new, &active_fd_set);
               }

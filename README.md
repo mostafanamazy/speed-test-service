@@ -1,7 +1,7 @@
 # speed-test-service
 client and server for speed test
 
-## build
+## Build
 make
 
 ## Run client 
@@ -9,9 +9,9 @@ make
 Example:   
 ./build/client config/client.ini
 
-### sample output
-[Download] `x` MB/s (for t seconds)   
-[Upload] `x` MB/s (for t seconds)
+  ### output
+  [Download] `x` MB/s (for t seconds)   
+  [Upload] `x` MB/s (for t seconds)
 
 ## Run server
 ./build/server `<path-to-config>`   
