@@ -5,7 +5,7 @@ client and server for speed test
 make
 
 ## Run client 
-./build/client `<path-to-config>`
+./build/client `<path-to-config>`   
 Example:   
 ./build/client config/client.ini
 
