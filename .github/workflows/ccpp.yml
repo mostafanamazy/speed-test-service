@@ -10,6 +10,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Checkout submodules
-    - uses: textbook/git-checkout-submodule-action@master 
+      uses: textbook/git-checkout-submodule-action@master 
     - name: make
       run: make
