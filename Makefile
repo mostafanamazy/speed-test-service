@@ -11,7 +11,7 @@ ${OUT_DIR}:
 
 .PHONY: all
 all:
-	cd libs/inih/extra && $(MAKE) -f Makefile.static
+	cd libs && $(MAKE)
 	cd client && $(MAKE)
 	cd server && $(MAKE)
 .PHONY: clean

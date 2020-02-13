@@ -3,7 +3,7 @@ CC=gcc
 CFLAGS =$(foreach d, $(IDIR), -I$d)
 
 ODIR=../obj
-LDIR =../libs/inih/extra/
+LDIR =../libs/
 LFLAGS = $(foreach d, $(LDIR), -L$d)
 BDIR = ../build
 
