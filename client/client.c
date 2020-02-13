@@ -42,7 +42,7 @@ init_sockaddr (struct sockaddr_in *name,
 }
 
 int
-input_timeout (int filedes, unsigned int seconds)
+io_timeout (int filedes, unsigned int seconds, _Bool reading)
 {
   fd_set set;
   struct timeval timeout;
@@ -60,7 +60,11 @@ input_timeout (int filedes, unsigned int seconds)
   int ret;
   do
    {
+     if(reading)
       ret = select(FD_SETSIZE, &set, NULL, NULL, &timeout);
+     else
+      ret = select(FD_SETSIZE, NULL, &set, NULL, &timeout);
+
     } while (ret == -1 && errno == EINTR);
    return ret;
 }
@@ -90,26 +94,29 @@ write_to_server (int filedes, configuration conf)
   int up_time = conf.upload_time > 0 ? conf.upload_time : 10;
   int down_time = conf.download_time > 0 ? conf.download_time : 10;
   int timeout = conf.timeout > 0 ? conf.timeout : 10;
+  int ret;
 
   while(end - start < conf.upload_time && nbytes > 0)
    {
-     nbytes = write (filedes, data, sizeof(data));
+     ret = io_timeout(filedes, timeout, 0);
+     nbytes = ret > 0 ? write (filedes, data, sizeof(data)) : ret;
      total += nbytes < 0 ? 0 : nbytes;
      time(&end);
    }
   fprintf(stdout,"[Upload] ");
   print_humanable(total, up_time);
-  nbytes = write (filedes, MESSAGE, strlen (MESSAGE) + 1);
+  ret = io_timeout(filedes, timeout, 0);
+  nbytes = ret > 0 ? write (filedes, MESSAGE, strlen (MESSAGE) + 1) : ret;
   if (nbytes < 0)
     {
       perror ("write");
       exit (EXIT_FAILURE);
     }
-    start = end;
+    time(&start);
     total = 0;
     while( end - start < down_time && nbytes > 0)
     {
-       int ret = input_timeout(filedes, timeout);  
+       ret = io_timeout(filedes, timeout, 1);
        nbytes = ret > 0 ? read (filedes, data, sizeof(data)) : ret;
        total += nbytes < 0 ? 0 : nbytes;
        time(&end);

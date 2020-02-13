@@ -10,8 +10,8 @@ Example:
 ./build/client config/client.ini
 
   ### output
+  [Upload] `x` MB/s (for t seconds)   
   [Download] `x` MB/s (for t seconds)   
-  [Upload] `x` MB/s (for t seconds)
 
 ## Run server
 ./build/server `<path-to-config>`   

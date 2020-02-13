@@ -7,7 +7,7 @@ LDIR =../libs/inih/extra/
 LFLAGS = $(foreach d, $(LDIR), -L$d)
 BDIR = ../build
 
-LIBS= -lpthread -linih
+LIBS= -linih
 
 DEPS = $(foreach d, $(IDIR), $(wildcard $d/*.h))
 
