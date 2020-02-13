@@ -14,6 +14,7 @@
 
 #include "ini.h"
 #include "globals.h"
+#include "configuration.h"
 
 #define MAX_CONN        16
 #define MAX_EVENTS      32
@@ -75,14 +76,6 @@ read_from_client (int filedes)
       return 0;
     }
 }
-
-typedef struct
-{
-  int port;
-  int timeout;
-  const char* ip;
-  const char* protocol;
-} configuration;
 
 static int handler(void* user, const char* section, const char* name,
                    const char* value)

@@ -1,5 +1,5 @@
 MKDIR_P = mkdir -p
-OUT_DIR = obj build
+OUT_DIR = obj/server obj/client build
 
 .PHONY: directories
 all: directories
@@ -17,5 +17,5 @@ all:
 .PHONY: clean
 
 clean:
-	rm -rf build obj
+	rm -rf ${OUT_DIR}
 
