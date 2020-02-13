@@ -67,6 +67,11 @@ write_to_server (int filedes, configuration conf)
   int timeout = conf.timeout > 0 ? conf.timeout : 10;
   int ret;
 
+  #define CHECKERROR(status, str) {\
+            if(status < 0){\
+              perror(str);\
+              exit(EXIT_FAILURE);\
+            }}
   while(end - start < up_time && nbytes > 0)
    {
      ret = io_timeout(filedes, timeout, 0);
@@ -74,24 +79,22 @@ write_to_server (int filedes, configuration conf)
      total += nbytes < 0 ? 0 : nbytes;
      time(&end);
    }
+  CHECKERROR(nbytes, "write");
   fprintf(stdout,"[Upload] ");
   print_humanable(total, up_time);
   ret = io_timeout(filedes, timeout, 0);
   nbytes = ret > 0 ? write (filedes, MESSAGE, strlen (MESSAGE) + 1) : ret;
-  if (nbytes < 0)
-    {
-      perror ("write");
-      exit (EXIT_FAILURE);
-    }
-    time(&start);
-    total = 0;
-    while( end - start < down_time && nbytes > 0)
-    {
+  CHECKERROR(nbytes, "write");
+  time(&start);
+  total = 0;
+  while( end - start < down_time && nbytes > 0)
+  {
        ret = io_timeout(filedes, timeout, 1);
        nbytes = ret > 0 ? read (filedes, data, sizeof(data)) : ret;
        total += nbytes < 0 ? 0 : nbytes;
        time(&end);
-    }
+  }
+  CHECKERROR(nbytes, "read");
   fprintf(stdout,"[Download] ");
   print_humanable(total, down_time);
 }
