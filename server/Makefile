@@ -1,4 +1,3 @@
-include ../Makefile.pre
 APPNAME = server
-include ../Makefile.pos
+include ../Makefile.share
 

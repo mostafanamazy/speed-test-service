@@ -1,36 +1,16 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <netdb.h>
 #include <errno.h>
 #include <unistd.h>
-#include <netinet/in.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <sys/time.h>
+#include <string.h>
 
 #include "ini.h"
 #include "globals.h"
+
+#include "sockaddress.h"
 #include "configuration.h"
 
 #define MESSAGE         "END"
-
-void
-init_sockaddr (struct sockaddr_in *name,
-               const char *hostname,
-               uint16_t port)
-{
-  struct hostent *hostinfo;
-
-  name->sin_family = AF_INET;
-  name->sin_port = htons (port);
-  hostinfo = gethostbyname (hostname);
-  if (hostinfo == NULL)
-    {
-      fprintf (stderr, "Unknown host %s.\n", hostname);
-      exit (EXIT_FAILURE);
-    }
-  name->sin_addr = *(struct in_addr *) hostinfo->h_addr;
-}
 
 int
 io_timeout (int filedes, unsigned int seconds, _Bool reading)
@@ -65,11 +45,11 @@ print_humanable(size_t bytes, int time)
 {
   bytes = bytes / time;
   if(bytes > 1048576)
-     fprintf(stdout, "`%d` MB/s (for %d seconds)\n", bytes >> 20, time);
+     fprintf(stdout, "`%ld` MB/s (for %d seconds)\n", bytes >> 20, time);
   else if(bytes > 1024)
-     fprintf(stdout, "`%d` KB/s (for %d seconds)\n", bytes >> 10, time);
+     fprintf(stdout, "`%ld` KB/s (for %d seconds)\n", bytes >> 10, time);
   else
-     fprintf(stdout, "`%d` B/s (for %d seconds)\n", bytes, time);
+     fprintf(stdout, "`%ld` B/s (for %d seconds)\n", bytes, time);
 }
 
 void
@@ -87,7 +67,7 @@ write_to_server (int filedes, configuration conf)
   int timeout = conf.timeout > 0 ? conf.timeout : 10;
   int ret;
 
-  while(end - start < conf.upload_time && nbytes > 0)
+  while(end - start < up_time && nbytes > 0)
    {
      ret = io_timeout(filedes, timeout, 0);
      nbytes = ret > 0 ? write (filedes, data, sizeof(data)) : ret;
