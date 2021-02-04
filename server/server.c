@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <sys/epoll.h>
+#include <string.h>
 
 #include "ini.h"
 #include "globals.h"
@@ -28,7 +29,7 @@ int main(int argc, char *argv[])
   fd_set active_fd_set, read_fd_set;
   int i;
   struct sockaddr_in clientname;
-  size_t size;
+  socklen_t size;
   int epfd;
   int nfds;
   struct epoll_event events[MAX_EVENTS];

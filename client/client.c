@@ -1,3 +1,5 @@
+#include <string.h>
+#include <unistd.h>
 #include "ini.h"
 #include "sockaddress.h"
 #include "trans.h"
